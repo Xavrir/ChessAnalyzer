@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=VT323&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Punisher Coin Cyberpunk Theme */
+  /* Background Colors */
+  --background-primary: #010d19;
+  --background-secondary: #141e1b;
+  --background-tertiary: #0a1612;
+  --overlay-dark: rgba(20, 30, 27, 0.8);
+  
+  /* Terminal Colors */
+  --terminal-green: #01e87c;
+  --terminal-blue: #00ffff;
+  --terminal-red: #ff3333;
+  --terminal-dim: rgba(57, 255, 20, 0.5);
+  
+  /* Text Colors */
+  --text-primary: #e0ffe6;
+  --text-secondary: #b8c5be;
+  --text-tertiary: #cbcbcb;
+  --text-bright: #d6e0dc;
+  --text-dim: rgba(203, 203, 203, 0.6);
+  
+  /* Button Colors */
+  --button-primary-bg: rgba(140, 255, 170, 0.08);
+  --button-primary-color: #8cffaa;
+  --button-primary-border: rgba(140, 255, 170, 0.15);
+  --button-accent-bg: #01e87c;
+  --button-accent-color: #000000;
+  
+  /* Glow Effects */
+  --glow-primary: 0 0 15px rgba(10, 255, 77, 0.7), 0 0 30px rgba(10, 255, 77, 0.4);
+  --glow-text: 0 0 10px rgba(10, 255, 77, 0.5);
+  --glow-border: 0 0 10px rgba(1, 232, 124, 0.3);
+  
+  /* Chess-specific */
+  --eval-positive: #01e87c;
+  --eval-negative: #ff3333;
+  --eval-neutral: #b8c5be;
+  
+  /* Legacy Tailwind vars */
+  --background: var(--background-primary);
+  --foreground: var(--text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background-primary);
+  --color-foreground: var(--text-primary);
+  --color-terminal-green: var(--terminal-green);
+  --color-terminal-blue: var(--terminal-blue);
+  --color-terminal-red: var(--terminal-red);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --font-sans: "Bai Jamjuree", sans-serif;
+  --font-mono: "VT323", monospace;
+  --font-heading: "Poppins", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Bai Jamjuree", sans-serif;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Cyberpunk Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--terminal-green);
+  border-radius: 4px;
+  box-shadow: var(--glow-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8cffaa;
+}
+
+/* Terminal Glow Effects */
+.terminal-glow {
+  text-shadow: var(--glow-text);
+}
+
+.border-glow {
+  box-shadow: var(--glow-border);
+}
+
+.card-glow {
+  box-shadow: var(--glow-primary);
+}
+
+/* Selection */
+::selection {
+  background: var(--terminal-green);
+  color: var(--background-primary);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--terminal-green);
+}
+
+/* Mono text */
+code, pre, .mono {
+  font-family: "VT323", monospace;
+  color: var(--terminal-green);
+}
+
+/* Glass morphism utility */
+.glass {
+  background: rgba(20, 30, 27, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--button-primary-border);
+}
+
+/* Scanline utility (disabled overlay but kept for backwards compatibility) */
+.scanlines {
+  position: relative;
+}
+
+/* Button base styles */
+button {
+  font-family: "Bai Jamjuree", sans-serif;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Link styles */
+a {
+  color: var(--terminal-blue);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--terminal-green);
+  text-shadow: var(--glow-text);
+}
+
+/* Animations */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 8px rgba(1, 232, 124, 0.6));
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.3) drop-shadow(0 0 12px rgba(1, 232, 124, 0.8));
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.animate-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Utility classes */
+.terminal-border {
+  border: 1px solid var(--terminal-green);
+  box-shadow: var(--glow-border);
+}
+
+.terminal-text {
+  color: var(--terminal-green);
+  font-family: "VT323", monospace;
+  text-shadow: var(--glow-text);
+}
+
+.tactical-card {
+  background: rgba(20, 30, 27, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(1, 232, 124, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(1, 232, 124, 0.1);
+}
+
+.tactical-card:hover {
+  border-color: var(--terminal-green);
+  box-shadow: 0 0 30px rgba(1, 232, 124, 0.3), 0 0 60px rgba(1, 232, 124, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Status badge styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(8px);
+}
+
+.status-badge.active {
+  background: rgba(1, 232, 124, 0.15);
+  border: 1px solid rgba(1, 232, 124, 0.4);
+  color: var(--terminal-green);
+  box-shadow: 0 0 15px rgba(1, 232, 124, 0.2);
+}
+
+.status-badge.ready {
+  background: rgba(0, 255, 255, 0.15);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  color: var(--terminal-blue);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+
+.status-badge.standby {
+  background: rgba(255, 255, 0, 0.15);
+  border: 1px solid rgba(255, 255, 0, 0.4);
+  color: #ffff00;
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.2);
+}
+
+/* Enhanced glow for icons */
+.icon-glow-green {
+  filter: drop-shadow(0 0 8px rgba(1, 232, 124, 0.6));
+}
+
+.icon-glow-blue {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.6));
+}
+
+.icon-glow-yellow {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.6));
+}
+
+/* Button glow enhancement */
+a[href="/analyze"]:hover {
+  box-shadow: 0 0 20px rgba(1, 232, 124, 0.5), 0 0 40px rgba(1, 232, 124, 0.3) !important;
+}
+
+a[href="/about"]:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}

@@ -1,0 +1,211 @@
+/**
+ * Stockfish Engine Web Worker
+ * Runs Stockfish in a separate thread to avoid blocking the UI
+ * Uses real Stockfish WASM from CDN
+ */
+
+// Web Worker context
+/// <reference lib="webworker" />
+declare const self: Worker & typeof globalThis;
+
+let wasmSupported = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let sf: any = null;
+let isReady = false;
+
+// Message types from main thread
+export interface WorkerMessage {
+  type: 'init' | 'position' | 'go' | 'stop' | 'quit';
+  fen?: string;
+  moves?: string[];
+  depth?: number;
+  multiPV?: number;
+}
+
+// Message types to main thread
+export interface WorkerResponse {
+  type: 'ready' | 'info' | 'bestmove' | 'error';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+}
+
+/**
+ * Initialize Stockfish engine from local files
+ */
+async function initEngine() {
+  try {
+    // Check WASM support
+    wasmSupported = typeof WebAssembly === 'object';
+    
+    if (!wasmSupported) {
+      throw new Error('WebAssembly not supported');
+    }
+
+    // Load Stockfish from local public folder (lila-stockfish-web)
+    // This version is specifically designed for Web Workers
+    const stockfishUrl = `${self.location.origin}/stockfish/sf171-79.js`;
+    
+    try {
+      importScripts(stockfishUrl);
+    } catch (importErr) {
+      throw new Error(`Failed to load Stockfish: ${importErr}`);
+    }
+
+    // Wait for the module to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Check if Stockfish is available
+    // lila-stockfish-web exports as Sf17179Web
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const StockfishModule = (self as any).Sf17179Web;
+    
+    if (typeof StockfishModule === 'undefined') {
+      throw new Error('Stockfish module not loaded');
+    }
+
+    // Initialize the WASM module
+    const module = await StockfishModule();
+    
+    if (!module) {
+      throw new Error('Failed to create Stockfish instance');
+    }
+
+    // Set up the engine with proper handlers
+    module.listen = (line: string) => {
+      handleStockfishMessage(line);
+    };
+
+    module.onError = (error: string) => {
+      postMessage({
+        type: 'error',
+        data: `Engine error: ${error}`
+      } as WorkerResponse);
+    };
+
+    // Store the module
+    sf = module;
+
+    // Send UCI command to initialize
+    sf.uci('uci');
+
+  } catch (err) {
+    postMessage({
+      type: 'error',
+      data: `Failed to initialize engine: ${err}`
+    } as WorkerResponse);
+  }
+}
+
+/**
+ * Handle Stockfish output
+ */
+function handleStockfishMessage(line: string) {
+  if (typeof line !== 'string') return;
+
+  // Engine ready
+  if (line === 'uciok') {
+    isReady = true;
+    postMessage({ type: 'ready' } as WorkerResponse);
+  }
+  
+  // Info lines (evaluation, pv, etc.)
+  else if (line.startsWith('info')) {
+    postMessage({
+      type: 'info',
+      data: line
+    } as WorkerResponse);
+  }
+  
+  // Best move found
+  else if (line.startsWith('bestmove')) {
+    postMessage({
+      type: 'bestmove',
+      data: line
+    } as WorkerResponse);
+  }
+}
+
+
+/**
+ * Set position on the board
+ */
+function setPosition(fen?: string, moves?: string[]) {
+  if (!sf || !isReady) return;
+
+  let command = 'position';
+
+  if (fen) {
+    command += ` fen ${fen}`;
+  } else {
+    command += ' startpos';
+  }
+
+  if (moves && moves.length > 0) {
+    command += ` moves ${moves.join(' ')}`;
+  }
+
+  sf.uci(command);
+}
+
+/**
+ * Start analysis
+ */
+function startAnalysis(depth: number = 20, multiPV: number = 1) {
+  if (!sf || !isReady) return;
+
+  // Set multi-PV if requested
+  if (multiPV > 1) {
+    sf.uci(`setoption name MultiPV value ${multiPV}`);
+  }
+
+  // Start analysis
+  sf.uci(`go depth ${depth}`);
+}
+
+/**
+ * Stop analysis
+ */
+function stopAnalysis() {
+  if (!sf || !isReady) return;
+  sf.uci('stop');
+}
+
+/**
+ * Quit engine
+ */
+function quitEngine() {
+  if (!sf) return;
+  sf.uci('quit');
+  sf = null;
+  isReady = false;
+}
+
+// Handle messages from main thread
+self.addEventListener('message', (e: MessageEvent) => {
+  const message = e.data as WorkerMessage;
+
+  switch (message.type) {
+    case 'init':
+      initEngine();
+      break;
+
+    case 'position':
+      setPosition(message.fen, message.moves);
+      break;
+
+    case 'go':
+      startAnalysis(message.depth, message.multiPV);
+      break;
+
+    case 'stop':
+      stopAnalysis();
+      break;
+
+    case 'quit':
+      quitEngine();
+      break;
+  }
+});
+
+// Export for TypeScript (won't be used in runtime)
+export {};
